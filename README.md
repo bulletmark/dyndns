@@ -58,6 +58,22 @@ Show log:
 
     journalctl -u dyndns
 
+### UPGRADE
+
+`cd` to source dir, as above. Then update the source:
+
+    git pull
+
+Update 3rd party packages:
+
+    env/bin/pip install -U pip
+    env/bin/pip install -U -r requirements.txt
+
+Update `~/.config/dyndns.conf` and `/etc/systemd/system/dyndns.service` if
+necessary. Then restart the service.
+
+    sudo systemctl restart dyndns
+
 ### LICENSE
 
 Copyright (C) 2017 Mark Blakeney. This program is distributed under the
