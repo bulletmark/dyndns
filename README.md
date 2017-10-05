@@ -6,9 +6,9 @@ file. I run this on Arch Linux on an Raspberry Pi and use it with
 [afraid.org][AFRAID] but it supports any dynamic DNS service which uses
 a simple URL update mechanism.
 
-Why another dynamic DNS client? I wanted something simple, lightweight,
-and generic to use with any dynamic DNS service. I didn't find anything
-I liked so wrote my own.
+Why another dynamic DNS client? I wanted a simple, lightweight app
+managed by systemd and generic to use with any dynamic DNS service and
+IP address servers. I didn't find anything I liked so wrote my own.
 
 The latest version and documentation is available at
 http://github.com/bulletmark/dyndns.
