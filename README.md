@@ -13,6 +13,17 @@ I liked so wrote my own.
 The latest version and documentation is available at
 http://github.com/bulletmark/dyndns.
 
+### OPERATION
+
+This client runs every `poll_period` (default 5 mins) and determines
+your current public IP address from a list of configured address
+servers. If this address differs from the last address then an update is
+sent to the configured dynamic DNS URL. Every `force_period` (default 2
+hours), an update is sent regardless. The last address received is
+always cached to disk (on change only) so lasts through reboots. The
+service URL to update, the time periods, and the list of address servers
+can be changed in the configuration file.
+
 ### INSTALLATION
 
 Requires `python` 3.5+ and a modern Linux `systemd` environment.
