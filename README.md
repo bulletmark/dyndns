@@ -20,6 +20,7 @@ Requires `python` 3.5+ and a modern `systemd` environment.
     python3 -m venv env
     env/bin/pip install -U pip
     env/bin/pip install -r requirements.txt
+    mkdir -p ~/.config
     cp dyndns.conf ~/.config
     vim ~/.config/dyndns.conf # Edit appropriately, e.g for your API key.
 
