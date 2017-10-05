@@ -1,0 +1,12 @@
+[Unit]
+Description=Update External IP address to a Dynamic DNS server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=#USER#
+WorkingDirectory=#PROGDIR#
+ExecStart=#PROGDIR#/#PROG#
+
+[Install]
+WantedBy=default.target

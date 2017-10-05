@@ -1,0 +1,119 @@
+#!env/bin/python3 -u
+# Requires python 3.5+
+'Update external IP address to a dynamic DNS server'
+
+# Mark Blakeney, Nov 2016.
+
+import sys, time, argparse
+from datetime import datetime
+from pathlib import Path
+
+import timesync, convtime
+
+import ruamel.yaml as yaml
+import requests
+
+PROGNAME = Path(sys.argv[0]).name
+
+LASTIP = Path.home() / '.cache' / (PROGNAME + '.cache')
+CNFFILE = Path.home() / '.config' / (PROGNAME + '.conf')
+
+# Process command line options
+opt = argparse.ArgumentParser(description=__doc__.strip(),
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+opt.add_argument('-d', '--debug', action='store_true',
+        help='output debug messages')
+opt.add_argument('-v', '--verbose', action='store_true',
+        help='output server responses')
+args = opt.parse_args()
+
+# Get configuration values
+with CNFFILE.open() as f:
+    conf = yaml.safe_load(f)
+
+poll_period = int(convtime.tosec(conf.get('poll_period', '5m')))
+force_period = int(convtime.tosec(conf.get('force_period', '2h')))
+
+ip_servers = conf['ip_servers']
+update_url = conf['update_url']
+
+LASTIP.parent.mkdir(parents=True, exist_ok=True)
+
+if LASTIP.exists():
+    lastip = LASTIP.read_text().strip()
+    last_poll = LASTIP.stat().st_mtime
+else:
+    lastip = 'unknown'
+    last_poll = time.time()
+
+next_poll = last_poll + force_period
+
+print('Last IP address is {} at {}'.format(lastip,
+    str(datetime.fromtimestamp(last_poll))[:19]))
+
+def urlget(url):
+    'Return reply from given URL'
+    try:
+        r = requests.get(url, timeout=20)
+    except Exception as e:
+        print('{} error {}'.format(url, str(e)), file=sys.stderr)
+        return None
+
+    if r.status_code != requests.codes.ok:
+        print('{} returned error: {}'.format(url, r.text), file=sys.stderr)
+        return None
+
+    resp = r.text
+    resp = resp.strip() if resp else None
+
+    if not resp:
+        print('{} returned no data'.format(url), file=sys.stderr)
+        return None
+
+    return resp
+
+# At system startup, we may need to wait until this host has
+# been time synced.
+while not timesync.inSyncAtBoot():
+    print('Waiting for initial time sync ..')
+    time.sleep(4)
+
+is_up = None
+while True:
+
+    # Get our external IP address from one of the online servers
+    ip = None
+    for url in ip_servers:
+        ip = urlget(url)
+        if ip:
+            if args.debug or not is_up:
+                print('Got IP address {} from {}'.format(ip, url))
+            break
+
+    if ip:
+        is_up = True
+        now = time.time()
+
+        if lastip != ip:
+            print('IP address changed from {} to {}'.format(lastip, ip))
+            LASTIP.write_text(ip)
+            lastip = ip
+        elif now >= next_poll:
+            if args.verbose:
+                print('IP address force set to {}'.format(ip))
+        else:
+            ip = None
+
+        if ip:
+            res = urlget(update_url)
+
+            if args.verbose:
+                print('DNS server reply is {}'.format(res if res else '<none>'))
+
+            next_poll = now + force_period
+    elif is_up:
+        is_up = False
+        print('Could not get IP address from {}'.format(
+            ' or '.join(ip_servers), file=sys.stderr))
+
+    time.sleep(poll_period)

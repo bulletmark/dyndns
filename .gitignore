@@ -1,0 +1,6 @@
+env*/
+*.pyc
+*.tgz
+*.gz
+*.html
+__pycache__/
