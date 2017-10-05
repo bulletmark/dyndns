@@ -1,8 +1,8 @@
 ### DynDNS
 
-[DynDNS][REPO] is a small client to update your dynamic DNS hosting
-service. Just configure your update URL in the configuration file. I run
-this on Arch Linux on an Raspberry Pi and use it with
+[DynDNS][REPO] is a small Linux client to update your dynamic DNS
+hosting service. Just configure your update URL in the configuration
+file. I run this on Arch Linux on an Raspberry Pi and use it with
 [afraid.org][AFRAID] but it supports any dynamic DNS service which uses
 a simple URL update mechanism.
 
@@ -15,7 +15,7 @@ http://github.com/bulletmark/dyndns.
 
 ### INSTALLATION
 
-Requires `python` 3.5+ and a modern `systemd` environment.
+Requires `python` 3.5+ and a modern Linux `systemd` environment.
 
     python3 -m venv env
     env/bin/pip install -U pip
