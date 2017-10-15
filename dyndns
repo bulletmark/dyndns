@@ -8,7 +8,7 @@ import sys, time, argparse
 from datetime import datetime
 from pathlib import Path
 
-import timesync, convtime
+import convtime
 
 import ruamel.yaml as yaml
 import requests
@@ -71,12 +71,6 @@ def urlget(url):
         return None
 
     return resp
-
-# At system startup, we may need to wait until this host has
-# been time synced.
-while not timesync.inSyncAtBoot():
-    print('Waiting for initial time sync ..')
-    time.sleep(4)
 
 is_up = None
 while True:
