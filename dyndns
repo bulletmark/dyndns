@@ -32,6 +32,7 @@ with CNFFILE.open() as f:
     conf = yaml.safe_load(f)
 
 poll_period = int(convtime.tosec(conf.get('poll_period', '5m')))
+retry_period = int(convtime.tosec(conf.get('retry_period', '30s')))
 force_period = int(convtime.tosec(conf.get('force_period', '2h')))
 
 ip_servers = conf['ip_servers']
@@ -105,9 +106,13 @@ while True:
                 print('DNS server reply is {}'.format(res if res else '<none>'))
 
             next_poll = now + force_period
-    elif is_up:
-        is_up = False
-        print('Could not get IP address from {}'.format(
-            ' or '.join(ip_servers), file=sys.stderr))
 
-    time.sleep(poll_period)
+        period = poll_period
+    else:
+        if is_up:
+            is_up = False
+            print('Could not get IP address from {}'.format(
+                ' or '.join(ip_servers), file=sys.stderr))
+        period = retry_period
+
+    time.sleep(period)
