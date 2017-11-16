@@ -28,6 +28,8 @@ can be changed in the configuration file.
 
 Requires `python` 3.5+ and a modern Linux `systemd` environment.
 
+    git clone https://github.com/bulletmark/dyndns.git
+    cd dyndns
     python3 -m venv env
     env/bin/pip install -r requirements.txt
     mkdir -p ~/.config
