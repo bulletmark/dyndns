@@ -5,8 +5,9 @@ After=network-online.target
 
 [Service]
 User=#USER#
+# Set the following to the source program directory (where you git cloned)
 WorkingDirectory=#PROGDIR#
-ExecStart=#PROGDIR#/#PROG#
+ExecStart=#PROGDIR#/%p
 
 [Install]
 WantedBy=default.target
