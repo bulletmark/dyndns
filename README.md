@@ -27,11 +27,10 @@ can be changed in the configuration file.
 ### INSTALLATION
 
 Requires `python` 3.5+ and a modern Linux `systemd` environment.
+Must install the packages `python3-ruamel-yaml` and `python3-requests`.
 
     git clone https://github.com/bulletmark/dyndns.git
     cd dyndns
-    python3 -m venv env
-    env/bin/pip install -r requirements.txt
     mkdir -p ~/.config
     cp dyndns.conf ~/.config
     vim ~/.config/dyndns.conf # Edit appropriately, e.g. add your API key.
@@ -64,11 +63,6 @@ Show log:
 `cd` to source dir, as above. Then update the source:
 
     git pull
-
-Update 3rd party packages:
-
-    env/bin/pip install -U pip
-    env/bin/pip install -U -r requirements.txt
 
 Update `~/.config/dyndns.conf` and `/etc/systemd/system/dyndns.service` if
 necessary. Then restart the service.

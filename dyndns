@@ -1,4 +1,4 @@
-#!env/bin/python3 -u
+#!/usr/bin/python3 -u
 # Requires python 3.5+
 'Update external IP address to a dynamic DNS server'
 
