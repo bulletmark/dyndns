@@ -41,15 +41,24 @@ update_url = conf['update_url']
 LASTIP.parent.mkdir(parents=True, exist_ok=True)
 
 if LASTIP.exists():
-    lastip = LASTIP.read_text().strip()
-    last_poll = LASTIP.stat().st_mtime
+    line = LASTIP.read_text().strip()
+    try:
+        lastip, lasturl = line.split(maxsplit=1)
+    except Exception:
+        LASTIP.unlink()
+        lastip = None
+    else:
+        last_poll = LASTIP.stat().st_mtime
 else:
-    lastip = 'unknown'
+    lastip = None
+
+if not lastip:
+    lastip = lasturl = 'unknown'
     last_poll = time.time()
 
 next_poll = last_poll + force_period
 
-print('Last IP address is {} at {}'.format(lastip,
+print('Last IP for {} is {} at {}'.format(lastip, lasturl,
     str(datetime.fromtimestamp(last_poll))[:19]))
 
 def urlget(url):
@@ -89,10 +98,14 @@ while True:
         is_up = True
         now = time.time()
 
-        if lastip != ip:
-            print('IP address changed from {} to {}'.format(lastip, ip))
-            LASTIP.write_text(ip)
+        if lastip != ip or lasturl != update_url:
+            if lastip != ip:
+                print('IP address changed from {} to {}'.format(lastip, ip))
+            if lasturl != update_url:
+                print('URL changed from {} to {}'.format(lasturl, update_url))
+            LASTIP.write_text('{} {}'.format(ip, update_url))
             lastip = ip
+            lasturl = update_url
         elif now >= next_poll:
             if args.verbose:
                 print('IP address force set to {}'.format(ip))
