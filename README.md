@@ -3,7 +3,7 @@
 [DynDNS][REPO] is a small Linux client to update your dynamic DNS
 hosting service. Just configure your update URL in the configuration
 file. I run this on Arch Linux on an Raspberry Pi and use it with
-[afraid.org][AFRAID] but it supports any dynamic DNS service which uses
+[duckdns.org][DUCK] but it supports any dynamic DNS service which uses
 a simple URL update mechanism.
 
 Why another dynamic DNS client? I wanted a simple, lightweight app
@@ -20,9 +20,10 @@ your current public IP address from a list of configured address
 servers. If this address differs from the last address then an update is
 sent to the configured dynamic DNS URL. Every `force_period` (default 2
 hours), an update is sent regardless. The last address received is
-always cached to disk (on change only) so lasts through reboots. The
-service URL to update, the time periods, and the list of address servers
-can be changed in the configuration file.
+stored on change only (and with the URL it represents) and always cached
+to disk so it lasts through reboots. The service URL to update, the time
+periods, and the list of address servers can be changed in the
+configuration file.
 
 ### INSTALLATION
 
@@ -84,5 +85,6 @@ Public License at <http://www.gnu.org/licenses/> for more details.
 
 [REPO]: https://github.com/bulletmark/dyndns/
 [AFRAID]: https://freedns.afraid.org/dynamic/v2/
+[DUCK]: https://duckdns.org/
 
 <!-- vim: se ai syn=markdown: -->
