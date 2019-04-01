@@ -4,8 +4,10 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
+# Set the following USER to your user name.
 User=#USER#
-# Set the following to the source program directory (where you git cloned)
+# Set the following PROGDIR to the source program directory (where you
+# git cloned)
 WorkingDirectory=#PROGDIR#
 ExecStart=#PROGDIR#/%p
 
