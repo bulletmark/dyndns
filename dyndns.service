@@ -6,10 +6,10 @@ After=network-online.target
 [Service]
 # Set the following USER to your user name.
 User=#USER#
-# Set the following PROGDIR to the source program directory (where you
+# Set the following WORKDIR to the source program directory (where you
 # git cloned)
-WorkingDirectory=#PROGDIR#
-ExecStart=#PROGDIR#/%p
+WorkingDirectory=#WORKDIR#
+ExecStart=#WORKDIR#/%p
 
 [Install]
 WantedBy=default.target

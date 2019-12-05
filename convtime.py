@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 'Module to convert configuration time values'
 
 import sys
