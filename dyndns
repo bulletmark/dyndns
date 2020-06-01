@@ -4,13 +4,15 @@
 
 # Mark Blakeney, Nov 2016.
 
-import sys, time, argparse
+import sys
+import time
+import argparse
 from datetime import datetime
 from pathlib import Path
 
 import convtime
 
-import ruamel.yaml as yaml
+from ruamel.yaml import YAML
 import requests
 
 PROGNAME = Path(sys.argv[0]).name
@@ -28,8 +30,7 @@ opt.add_argument('-v', '--verbose', action='store_true',
 args = opt.parse_args()
 
 # Get configuration values
-with CNFFILE.open() as f:
-    conf = yaml.safe_load(f)
+conf = YAML(typ='safe').load(CNFFILE)
 
 poll_period = int(convtime.tosec(conf.get('poll_period', '5m')))
 retry_period = int(convtime.tosec(conf.get('retry_period', '30s')))
