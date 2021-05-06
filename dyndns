@@ -66,12 +66,9 @@ def urlget(url):
     'Return reply from given URL'
     try:
         r = requests.get(url, timeout=20)
-    except Exception as e:
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
         print('{} error {}'.format(url, str(e)), file=sys.stderr)
-        return None
-
-    if r.status_code != requests.codes.ok:
-        print('{} returned error: {}'.format(url, r.text), file=sys.stderr)
         return None
 
     resp = r.text
@@ -126,7 +123,7 @@ while True:
         if is_up:
             is_up = False
             print('Could not get IP address from {}'.format(
-                ' or '.join(ip_servers), file=sys.stderr))
+                ' or '.join(ip_servers)), file=sys.stderr)
         period = retry_period
 
     time.sleep(period)
