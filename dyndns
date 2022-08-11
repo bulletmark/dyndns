@@ -68,14 +68,14 @@ def urlget(url):
         r = requests.get(url, timeout=20)
         r.raise_for_status()
     except requests.exceptions.RequestException as e:
-        print('{} error {}'.format(url, str(e)), file=sys.stderr)
+        print(f'{url} error {str(e)}', file=sys.stderr)
         return None
 
     resp = r.text
     resp = resp.strip() if resp else None
 
     if not resp:
-        print('{} returned no data'.format(url), file=sys.stderr)
+        print(f'{url} returned no data', file=sys.stderr)
         return None
 
     return resp
@@ -89,7 +89,7 @@ while True:
         ip = urlget(url)
         if ip:
             if args.debug or not is_up:
-                print('Got IP address {} from {}'.format(ip, url))
+                print(f'Got IP address {ip} from {url}')
             break
 
     if ip:
@@ -98,15 +98,15 @@ while True:
 
         if lastip != ip or lasturl != update_url:
             if lastip != ip:
-                print('IP address changed from {} to {}'.format(lastip, ip))
+                print(f'IP address changed from {lastip} to {ip}')
             if lasturl != update_url:
-                print('URL changed from {} to {}'.format(lasturl, update_url))
-            LASTIP.write_text('{} {}'.format(ip, update_url))
+                print(f'URL changed from {lasturl} to {update_url}')
+            LASTIP.write_text(f'{ip} {update_url}')
             lastip = ip
             lasturl = update_url
         elif now >= next_poll:
             if args.verbose:
-                print('IP address force set to {}'.format(ip))
+                print(f'IP address force set to {ip}')
         else:
             ip = None
 
@@ -114,7 +114,7 @@ while True:
             res = urlget(update_url)
 
             if args.verbose:
-                print('DNS server reply is {}'.format(res if res else '<none>'))
+                print(f"DNS server reply is {res if res else '<none>'}")
 
             next_poll = now + force_period
 

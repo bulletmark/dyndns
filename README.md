@@ -27,7 +27,7 @@ configuration file.
 
 ### INSTALLATION
 
-Requires `python` 3.5+ and a modern Linux `systemd` environment.
+Requires `python` 3.6 or later and a modern Linux `systemd` environment.
 Must install the packages `python3-ruamel-yaml` and `python3-requests`.
 
     git clone https://github.com/bulletmark/dyndns.git
