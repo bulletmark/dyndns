@@ -59,8 +59,8 @@ if not lastip:
 
 next_poll = last_poll + force_period
 
-print('Last IP for {} is {} at {}'.format(lastip, lasturl,
-    str(datetime.fromtimestamp(last_poll))[:19]))
+ds = str(datetime.fromtimestamp(last_poll))[:19]
+print(f'Last IP for {lastip} is {lasturl} at {ds}')
 
 def urlget(url):
     'Return reply from given URL'
@@ -122,8 +122,8 @@ while True:
     else:
         if is_up:
             is_up = False
-            print('Could not get IP address from {}'.format(
-                ' or '.join(ip_servers)), file=sys.stderr)
+            ips = ' or '.join(ip_servers)
+            print(f'Could not get IP address from {ips}', file=sys.stderr)
         period = retry_period
 
     time.sleep(period)
