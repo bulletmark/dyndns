@@ -32,7 +32,7 @@ def todelta(time_str):
         elif timestr.endswith('w'):
             return timedelta(weeks=num)
 
-    log.error('Do not understand "%s" time format', time_str)
+    log.error(f'Do not understand "{time_str}" time format')
     sys.exit(1)
 
 def tosec(time_str):
