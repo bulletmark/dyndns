@@ -1,4 +1,6 @@
 venv*/
+.idea/
+.vscode/
 *.pyc
 *.tgz
 *.gz

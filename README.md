@@ -37,7 +37,7 @@ Must install the packages `python3-ruamel-yaml` and `python3-requests`.
     vim ~/.config/dyndns.conf # Edit appropriately, e.g. add your API key.
 
     sudo cp dyndns.service /etc/systemd/system
-    sudo vim /etc/systemd/system/dyndns.service # Edit #TEMPLATE# values.
+    sudoedit /etc/systemd/system/dyndns.service # Edit #TEMPLATE# values.
 
 ### STARTING, STOPPING, AND STATUS
 
