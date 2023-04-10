@@ -78,7 +78,7 @@ Type `dyndns -h` to view the usage summary:
 ```
 usage: dyndns [-h] [-d] [-v]
 
-Update external IP address to a dynamic DNS server
+Update external IP address to a dynamic DNS server.
 
 options:
   -h, --help     show this help message and exit
