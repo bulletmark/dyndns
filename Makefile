@@ -16,5 +16,8 @@ check:
 	flake8 *.py dyndns
 	vermin -i --no-tips *.py dyndns
 
+doc:
+	update-readme-usage
+
 clean:
 	rm -rf *.pyc  __pycache__

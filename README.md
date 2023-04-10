@@ -1,4 +1,4 @@
-### DynDNS
+## DynDNS
 
 [DynDNS][REPO] is a small Linux client to update your dynamic DNS
 hosting service. Just configure your update URL in the configuration
@@ -13,19 +13,19 @@ IP address servers. I didn't find anything I liked so wrote my own.
 The latest version and documentation is available at
 http://github.com/bulletmark/dyndns.
 
-### OPERATION
+## OPERATION
 
 This client runs every `poll_period` (default 5 mins) and determines
 your current public IP address from a list of configured address
 servers. If this address differs from the last address then an update is
 sent to the configured dynamic DNS URL. Every `force_period` (default 2
 hours), an update is sent regardless. The last address received is
-stored on change only (and with the URL it represents) and always cached
+stored on change only (with the URL it represents) and is always cached
 to disk so it lasts through reboots. The service URL to update, the time
 periods, and the list of address servers can be changed in the
 configuration file.
 
-### INSTALLATION
+## INSTALLATION
 
 Requires `python` 3.6 or later and a modern Linux `systemd` environment.
 Must install the packages `python3-ruamel-yaml` and `python3-requests`.
@@ -39,7 +39,7 @@ Must install the packages `python3-ruamel-yaml` and `python3-requests`.
     sudo cp dyndns.service /etc/systemd/system
     sudoedit /etc/systemd/system/dyndns.service # Edit #TEMPLATE# values.
 
-### STARTING, STOPPING, AND STATUS
+## STARTING, STOPPING, AND STATUS
 
 To enable starting at boot and also start immediately:
 
@@ -59,7 +59,7 @@ Show log:
 
     journalctl -u dyndns
 
-### UPGRADE
+## UPGRADE
 
 `cd` to source dir, as above. Then update the source:
 
@@ -70,7 +70,23 @@ necessary. Then restart the service.
 
     sudo systemctl restart dyndns
 
-### LICENSE
+
+## USAGE
+
+Type `dyndns -h` to view the usage summary:
+
+```
+usage: dyndns [-h] [-d] [-v]
+
+Update external IP address to a dynamic DNS server
+
+options:
+  -h, --help     show this help message and exit
+  -d, --debug    output debug messages (default: False)
+  -v, --verbose  output server responses (default: False)
+```
+
+## LICENSE
 
 Copyright (C) 2017 Mark Blakeney. This program is distributed under the
 terms of the GNU General Public License.
