@@ -28,10 +28,11 @@ configuration file.
 ## INSTALLATION
 
 Requires `python` 3.6 or later and a modern Linux `systemd` environment.
-Must install the packages `python3-ruamel-yaml` and `python3-requests`.
 
     git clone https://github.com/bulletmark/dyndns.git
     cd dyndns
+    python3 -m venv venv
+    venv/bin/pip install -r requirements.txt
     mkdir -p ~/.config
     cp dyndns.conf ~/.config
     vim ~/.config/dyndns.conf # Edit appropriately, e.g. add your API key.
