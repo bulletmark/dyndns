@@ -29,47 +29,67 @@ configuration file.
 
 Requires `python` 3.6 or later and a modern Linux `systemd` environment.
 
+1. Clone repository and create configuration:
+
+    ```shell
     git clone https://github.com/bulletmark/dyndns.git
     cd dyndns
-    python3 -m venv venv
-    venv/bin/pip install -r requirements.txt
     mkdir -p ~/.config
     cp dyndns.conf ~/.config
     vim ~/.config/dyndns.conf # Edit appropriately, e.g. add your API key.
+    ```
 
+2. Create virtual environment (venv) and install service.
+
+    ```shell
+    python3 -m venv venv
+    venv/bin/pip install -r requirements.txt
     sudo cp dyndns.service /etc/systemd/system
     sudoedit /etc/systemd/system/dyndns.service # Edit #TEMPLATE# values.
+    ```
 
 ## STARTING, STOPPING, AND STATUS
 
 To enable starting at boot and also start immediately:
 
-    sudo systemctl enable dyndns
-    sudo systemctl start dyndns
+```shell
+sudo systemctl enable dyndns
+sudo systemctl start dyndns
+```
 
 To stop immediately and also disable starting at boot:
 
-    sudo systemctl stop dyndns
-    sudo systemctl disable dyndns
+```shell
+sudo systemctl stop dyndns
+sudo systemctl disable dyndns
+```
 
 Show status:
 
-    systemctl status dyndns
+```shell
+systemctl status dyndns
+```
 
 Show log:
 
-    journalctl -u dyndns
+```shell
+journalctl -u dyndns
+```
 
 ## UPGRADE
 
 `cd` to source dir, as above. Then update the source:
 
-    git pull
+```shell
+git pull
+```
 
 Update `~/.config/dyndns.conf` and `/etc/systemd/system/dyndns.service` if
 necessary. Then restart the service.
 
-    sudo systemctl restart dyndns
+```shell
+sudo systemctl restart dyndns
+```
 
 
 ## USAGE
