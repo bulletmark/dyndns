@@ -1,5 +1,5 @@
 [Unit]
-Description=Update External IP address to a Dynamic DNS server
+Description=Update External IP v4/v6 addresses to a Dynamic DNS server
 Wants=network-online.target
 After=network-online.target
 

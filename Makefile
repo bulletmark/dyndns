@@ -13,8 +13,8 @@
 # details.
 
 check:
-	flake8 *.py dyndns
-	vermin -i --no-tips *.py dyndns
+	ruff .
+	vermin --exclude tomllib -i --no-tips *.py dyndns
 
 doc:
 	update-readme-usage

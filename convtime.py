@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 'Module to convert configuration time values'
-
 import sys
 from datetime import timedelta
-import logging as log
 
 def todelta(time_str):
     'Convert time "nn[.d][smdhw]" string to timedelta'
@@ -32,8 +30,7 @@ def todelta(time_str):
         elif timestr.endswith('w'):
             return timedelta(weeks=num)
 
-    log.error(f'Do not understand "{time_str}" time format')
-    sys.exit(1)
+    sys.exit(f'Do not understand "{time_str}" time format')
 
 def tosec(time_str):
     'Convert time "nn[.d][smdhw]" string to secs'

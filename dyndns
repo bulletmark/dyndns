@@ -1,128 +1,294 @@
 #!venv/bin/python -u
-'Update external IP address to a dynamic DNS server.'
-
+'Update external IP v4 and/or v6 addresses to a dynamic DNS server.'
 # Mark Blakeney, Nov 2016.
-
+import os
 import sys
-import time
 import argparse
-from datetime import datetime
+import asyncio
+import time
+import json
+import re
 from pathlib import Path
+from hashlib import sha256 as hasher
+from collections import deque
+from ipaddress import IPv4Address, IPv6Address
+from aiohttp import ClientSession as Session
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 import convtime
 
-from ruamel.yaml import YAML
-import requests
+PROG = Path(__file__).stem
+CACHEDIR = Path(os.getenv('XDG_CACHE_HOME', '~/.cache'), PROG).expanduser()
+CONFFILE = Path(os.getenv('XDG_CONFIG_HOME', '~/.config'),
+                f'{PROG}.toml').expanduser()
+IPCACHE = CACHEDIR / 'ipaddrs'
+URLCACHE = CACHEDIR / 'urls'
 
-PROGNAME = Path(sys.argv[0]).name
-
-LASTIP = Path.home() / '.cache' / (PROGNAME + '.cache')
-CNFFILE = Path.home() / '.config' / (PROGNAME + '.conf')
+ADDRESS_TYPES = {'ipv4': IPv4Address, 'ipv6': IPv6Address}
+ADDRESS_TXT = ' or '.join(ADDRESS_TYPES)
+OFFSTATES = {'off', 'no', 'none', 'false'}
 
 # Process command line options
-opt = argparse.ArgumentParser(description=__doc__.strip(),
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-opt.add_argument('-d', '--debug', action='store_true',
-        help='output debug messages')
+opt = argparse.ArgumentParser(description=__doc__.strip())
 opt.add_argument('-v', '--verbose', action='store_true',
-        help='output server responses')
+        help='verbose output')
+opt.add_argument('-i', '--ignore-cache', action='store_true',
+        help='ignore cache for startup')
+opt.add_argument('-c', '--conf', default=str(CONFFILE),
+        help=f'configuration file, default = {CONFFILE}')
 args = opt.parse_args()
 
+
+conffile = Path(args.conf)
+if not conffile.exists():
+    sys.exit(f'ERROR: Configuration file "{conffile}" does not exist.')
+
 # Get configuration values
-conf = YAML(typ='safe').load(CNFFILE)
+with conffile.open('rb') as fp:
+    conf = tomllib.load(fp)
 
-poll_period = int(convtime.tosec(conf.get('poll_period', '5m')))
-retry_period = int(convtime.tosec(conf.get('retry_period', '30s')))
-force_period = int(convtime.tosec(conf.get('force_period', '2h')))
+tconf = conf.get('times', {})
+poll_period = int(convtime.tosec(tconf.get('poll_period', '5m')))
+force_period = int(convtime.tosec(tconf.get('force_period', '2h'))) * 1000_000_000
 
-ip_servers = conf['ip_servers']
-update_url = conf['update_url']
-
-LASTIP.parent.mkdir(parents=True, exist_ok=True)
-
-if LASTIP.exists():
-    line = LASTIP.read_text().strip()
+async def urlget(session, url):
+    'Fetch given url'
     try:
-        lastip, lasturl = line.split(maxsplit=1)
-    except Exception:
-        LASTIP.unlink()
-        lastip = None
-    else:
-        last_poll = LASTIP.stat().st_mtime
-else:
-    lastip = None
-
-if not lastip:
-    lastip = lasturl = 'unknown'
-    last_poll = time.time()
-
-next_poll = last_poll + force_period
-
-ds = str(datetime.fromtimestamp(last_poll))[:19]
-print(f'Last IP for {lastip} is {lasturl} at {ds}')
-
-def urlget(url):
-    'Return reply from given URL'
-    try:
-        r = requests.get(url, timeout=20)
-        r.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f'{url} error {str(e)}', file=sys.stderr)
+        async with session.get(url) as response:
+            response.raise_for_status()
+            txt = await response.text()
+    except Exception as e:
+        print(str(e), file=sys.stderr)
         return None
 
-    resp = r.text
-    resp = resp.strip() if resp else None
+    return txt.strip() if txt else ''
 
-    if not resp:
-        print(f'{url} returned no data', file=sys.stderr)
-        return None
+class IPSERVER:
+    types = set()
 
-    return resp
+    def __init__(self, name, servers):
+        'Create IP address type to poll servers'
+        self.address_type = ADDRESS_TYPES.get(name)
+        if not self.address_type:
+            sys.exit(f'ERROR: Invalid server IP type {name} configured.')
 
-is_up = None
-while True:
+        if len(servers) < 1:
+            sys.exit(f'ERROR: Must define at least 1 {name} server.')
 
-    # Get our external IP address from one of the online servers
-    ip = None
-    for url in ip_servers:
-        ip = urlget(url)
-        if ip:
-            if args.debug or not is_up:
-                print(f'Got IP address {ip} from {url}')
-            break
+        self.name = name
+        self.servers = deque(servers)
+        self.types.add(name)
+        self.file = IPCACHE / name
+        self.session = None
+        self.ip = None
+        self.failed = False
 
-    if ip:
-        is_up = True
-        now = time.time()
+        # Load fetch values from last time we ran
+        if self.file.exists() and not args.ignore_cache:
+            try:
+                self.ip = self.file.read_text()
+            except Exception:
+                self.file.unlink()
 
-        if lastip != ip or lasturl != update_url:
-            if lastip != ip:
-                print(f'IP address changed from {lastip} to {ip}')
-            if lasturl != update_url:
-                print(f'URL changed from {lasturl} to {update_url}')
-            LASTIP.write_text(f'{ip} {update_url}')
-            lastip = ip
-            lasturl = update_url
-        elif now >= next_poll:
-            if args.verbose:
-                print(f'IP address force set to {ip}')
+        print(f'Configured ADDRESS {name}: {servers}')
+
+    def ip_valid(self, ipstr):
+        'Return True if passed IP address is valid'
+        if not ipstr:
+            return False
+
+        try:
+            _ = self.address_type(ipstr)
+        except Exception:
+            return False
+
+        return True
+
+    async def get_ip(self):
+        'Return (name, ipaddress) if we fetch IP address successfully'
+        # Set session handle 1st time (must be done in async func)
+        first = not self.session
+        if first:
+            self.session = Session()
+
+        for index, url in enumerate(self.servers):
+            ip = await urlget(self.session, url)
+            if not self.ip_valid(ip):
+                if not self.failed:
+                    print(f'Failed to fetch {self.name} address from '
+                        f'{url} (#{index})', file=sys.stderr)
+            else:
+                # Rotate server list so that last good is first
+                self.servers.rotate(-index)
+
+                if ip != self.ip:
+                    print(f'{self.name} address changed from '
+                        f'{self.ip} to {ip} ({url})')
+                    self.ip = ip
+                    self.file.write_text(ip)
+
+                if args.verbose or first or self.failed:
+                    print(f'Fetched {self.name} address {ip} '
+                          f'from {url} (#{index})')
+
+                self.failed = False
+                return self.name, ip
+
+        if not self.failed:
+            print(f'Failed to fetch {self.name} address from any server',
+                file=sys.stderr)
+            self.failed = True
+
+        return None, None
+
+class URL:
+    allneeds = set()
+
+    def __init__(self, conf):
+        'Create URL for sending to dyndns server'
+        self.url = conf.get('url')
+        if not self.url:
+            sys.exit('ERROR: url not defined')
+
+        # Record which IP address types we need for this URL
+        self.needs = {k for k in ADDRESS_TYPES if f'<{k}>' in self.url}
+
+        auto = conf.get('auto', 'off')
+        auto = 'false' if auto is False else auto.lower()
+        if auto not in OFFSTATES:
+            for k in ADDRESS_TYPES:
+                if k == auto:
+                    self.needs.add(k)
+                    break
+            else:
+                sys.exit(f'ERROR: url {self.url}, auto={auto} not valid.')
+
+        if not self.needs:
+            sys.exit(f'ERROR: url {self.url} must specify either {ADDRESS_TXT}')
+
+        # Sanity check configuration
+        for key in self.needs:
+            if key not in IPSERVER.types:
+                sys.exit(f'ERROR: URL {self.url} needs {key} but {key} server '
+                         'is not configured.')
+
+        response = conf.get('response')
+        if response is None:
+            self.response = []
+        elif isinstance(response, str):
+            self.response = [response]
         else:
-            ip = None
+            self.response = response
 
-        if ip:
-            res = urlget(update_url)
+        self.response = [re.compile(s) for s in self.response]
+        self.allneeds |= self.needs
+        self.file = URLCACHE / hasher(self.url.encode()).hexdigest()
+        self.session = None
+        self.values = None
+        self.time = None
+        self.failed = False
 
-            if args.verbose:
-                print(f"DNS server reply is {res if res else '<none>'}")
+        # Load sent values from last time we ran
+        if self.file.exists() and not args.ignore_cache:
+            try:
+                with self.file.open() as fp:
+                    self.values = json.load(fp)
+            except Exception:
+                self.file.unlink()
+            else:
+                self.time = self.file.stat().st_mtime_ns + force_period
+                # Remove url (comment) field
+                if 'url' in self.values:
+                    del self.values['url']
 
-            next_poll = now + force_period
+        needs = ' and '.join(self.needs)
+        print(f'Configured URL {self.url}: {needs}')
 
-        period = poll_period
-    else:
-        if is_up:
-            is_up = False
-            ips = ' or '.join(ip_servers)
-            print(f'Could not get IP address from {ips}', file=sys.stderr)
-        period = retry_period
+    async def set_ips(self, now, values):
+        'Send IP addresses to this dyndns server'
+        have = set(values)
+        if have < self.needs:
+            if not self.failed:
+                missing = ' and '.join(self.needs - have)
+                print(f'Skipping url {self.url} because {missing} data missing')
+                self.failed = True
+            return
+        else:
+            self.failed = False
 
-    time.sleep(period)
+        # Strip out only the values we need for this URL
+        values = {k: values[k] for k in self.needs}
+
+        # Only send on change or if "force_period" is due
+        change = not self.values or values != self.values
+        if not change and self.time and now < self.time:
+            return
+
+        # Substitute IPs into URL
+        url = self.url
+        for key, value in values.items():
+            url = url.replace(f'<{key}>', value)
+
+        # Set session handle 1st time (must be done in async func)
+        if not self.session:
+            self.session = Session()
+
+        # Send to dyndns server
+        response = await urlget(self.session, url)
+        if response is not None:
+            if not self.response or any(s.search(response) for s in self.response):
+                # Save record of last send (add url for id/comment) (add url
+                # for id/comment)
+                data = {'url': self.url}
+                data.update(values)
+                with self.file.open('w') as fp:
+                    json.dump(data, fp)
+
+                self.values = values
+                self.time = now + force_period
+                if args.verbose or change:
+                    if response:
+                        response = f': {response}'
+                    types = ' & '.join(self.needs)
+                    print(f'Sent {url} for {types}{response}')
+            else:
+                print(f'URL {url} responded with error: {response}', file=sys.stderr)
+        else:
+            print(f'Failed to send {url}', file=sys.stderr)
+
+async def main():
+    'Main code'
+    IPCACHE.mkdir(parents=True, exist_ok=True)
+    URLCACHE.mkdir(parents=True, exist_ok=True)
+
+    # Build list of IP address servers
+    servers = {k: IPSERVER(k, v) for k, v in conf.get('servers', {}).items()}
+
+    if len(servers) < 1:
+        sys.exit(f'ERROR: Must define at least one IP address '
+                 f'{ADDRESS_TXT} server list.')
+
+    # Build list of dyndns urls
+    urls = [URL(c) for c in conf.get('urls', {})]
+
+    if len(urls) < 1:
+        sys.exit('ERROR: Must define at least one url.')
+
+    # Now discard IP address types we dont actually need after reading URLs
+    servers = [servers[k] for k in URL.allneeds]
+
+    while True:
+        # Get IP addresses in parallel
+        res = await asyncio.gather(*(s.get_ip() for s in servers))
+        ips = {k: v for k, v in res if k}
+        now = time.time_ns()
+
+        # Got all addresses, now send to dyndns URLs in parallel
+        await asyncio.gather(*(u.set_ips(now, ips) for u in urls))
+        await asyncio.sleep(poll_period)
+
+asyncio.run(main())

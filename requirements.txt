@@ -1,2 +1,2 @@
-ruamel.yaml
-requests
+aiohttp
+tomli; python_version < '3.11'

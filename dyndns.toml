@@ -1,0 +1,95 @@
+# Dyndns configuration file.
+#
+# Copy this TOML file to ~/.config/ and uncomment and then edit/add the
+# following [[urls]] list to define your own dyndns service[s]. Add as
+# many [[urls]] as you want, i.e. one for each dyndns host/url.
+#
+# There are [[urls]], [times], and [servers] sections in this file. You
+# have to add at least one (or more) [[urls]] entry but typically don't
+# need to edit the [times] or [server] entries.
+#
+# A [[urls]] entry can have the following values:
+#
+# url (mandatory): The URL of the service. Typically have to add your
+#   DOMAIN or HOSTNAME and/or your TOKEN or PASSWORD as parameters in
+#   this URL. You can add the placemarkers "<ipv4>" and/or "<ipv6>"
+#   where you want those IP addresses inserted when sent to the service.
+#   See the examples below.
+#
+# auto (optional): Can be either auto="off" (default if not provided),
+#   or auto="ipv4", or auto="ipv6". You add this when using automatic IP
+#   detection so that this program knows which IP address to check for
+#   change and then notify the service via a URL update.
+#
+# response (optional): This is a text regular expression string against
+#   which the server text response is checked to confirm a successful
+#   update. If not provided then the returned text is ignored and the
+#   URL message is considered successful (unless a HTTP error code is
+#   returned). Can be a single string, or a list of regular expression
+#   strings. If any comparison of a string in that list passes, then the
+#   URL message is considered successful. See the examples below.
+#
+# Some example [[urls]] entries follow:
+
+# duckdns.org: See https://www.duckdns.org/spec.jsp.
+# [[urls]]
+# url = 'https://www.duckdns.org/update?domains=HOSTNAME&token=TOKEN&ip=<ipv4>&ipv6=<ipv6>'
+# response = '^OK$'
+
+# Dynv6, with explicit ipv4 and ipv6: See https://dynv6.com/docs/apis.
+# [[urls]]
+# url = 'http://dynv6.com/api/update?zone=DOMAIN&token=TOKEN&ipv4=<ipv4>&ipv6=<ipv6>'
+# response = '^addresses updated'
+
+# Dynu: See https://www.dynu.com/en-US/DynamicDNS/IP-Update-Protocol.
+# [[urls]]
+# url = 'https://api.dynu.com/nic/update?password=PASSWORD&hostname=DOMAIN&myip=<ipv4>&myipv6=<ipv6>'
+# response = ['^good', '^nochg']
+
+# Freedns.afraid.org, with automatic IPv4 detection: see https://freedns.afraid.org/dynamic/v2/.
+# [[urls]]
+# url = 'http://sync.afraid.org/u/TOKEN/'
+# auto = 'ipv4'
+# response = ['Updated', 'No IP change']
+
+# Freedns.afraid.org, with automatic IPv6 detection:
+# [[urls]]
+# url = 'http://v6.sync.afraid.org/u/TOKEN/'
+# auto = 'ipv6'
+# response = ['Updated', 'No IP change']
+
+# *** SHOULD NOT NEED TO MODIFY ANY OF THE FOLLOWING SETTINGS ***
+#
+# NOTE: int time/timeout/period values specified in this file
+# default to seconds but can also be specified as a string 'nx' where n
+# = number with optional single character x = 's' for secs, 'm' for
+# mins, 'h' for hours, 'd' for days, or 'w' for weeks. There can be no
+# spaces. E.g. "4h" = 4 hours, i.e shorthand for 4 x 60 x 60 secs.
+
+[times]
+# Period at which we check our IP address has changed. If no change at
+# this check then no dyndns updates are done.
+poll_period = '5m'
+
+# Slower period at which we force a dyndns update.
+force_period = '2h'
+
+[servers]
+# Public servers which return your IP v4 and/or v6 address, in preferred
+# order. If a request fails, then program will use the next server in
+# the group list (until it fails). A failed server is rotated to the end
+# of the list (internally, at runtime). Note that the program only polls
+# ipv4 and/or ipv6 servers if required by the configured urls above so
+# no need to delete anything below.
+ipv4 = [
+  'https://ipv4.icanhazip.com/',
+  'https://ipinfo.io/ip',
+  'https://api.ipify.org',
+]
+
+ipv6 = [
+  'https://ipv6.icanhazip.com/',
+  'https://api64.ipify.org',
+]
+
+# vim:se syn=toml sw=2:
