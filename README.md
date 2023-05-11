@@ -14,7 +14,8 @@ URL get update mechanism, such as:
 - [FreeDNS](https://freedns.afraid.org/)
 
 The above all offer free dynamic DNS services. There is example
-configuration for each of these services in the sample `dyndns.toml`
+configuration for each of these services in the sample
+[`dyndns.toml`](https://github.com/bulletmark/dyndns/blob/master/dyndns.toml)
 configuration file but note that most dynamic DNS services should be
 supported. Extensive configuration instructions are provided in that
 file.
@@ -27,9 +28,11 @@ find anything I liked so wrote my own.
 
 Ensure you read the [latest
 documentation](http://github.com/bulletmark/dyndns) and the instructions
-in the example `dyndns.toml` file but then ask a question on the DynDNS
-[discussion forum](https://github.com/bulletmark/dyndns/discussions) if
-you still need clarification about usage or operation.
+in the example
+[`dyndns.toml`](https://github.com/bulletmark/dyndns/blob/master/dyndns.toml)
+file but then ask a question on the DynDNS [discussion
+forum](https://github.com/bulletmark/dyndns/discussions) if you still
+need clarification about usage or operation.
 
 ## Operation
 
@@ -48,9 +51,10 @@ servers can be changed in the configuration file.
 
 ## Configuration
 
-You copy the sample `dyndns.toml` file to your `~/.config/` and then
-edit it for your requirements. Follow the examples and instructions in
-that file. 
+You copy the sample
+[`dyndns.toml`](https://github.com/bulletmark/dyndns/blob/master/dyndns.toml)
+file to your `~/.config/` and then edit it for your requirements. Follow
+the examples and instructions in that file.
 
 ## Installation
 
