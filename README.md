@@ -159,14 +159,15 @@ options:
   and "&lt;ipv6&gt;" placemarkers in the url string.
 
 - Cater for dynamic DNS servers which return one or more text strings
-  for success/failure instead of just look at HTML response status code.
+  for success/failure instead of just looking at the HTML response
+  status code.
 
 - Changed from [YAML](https://yaml.org/) to [TOML](https://toml.io/en/)
   configuration file format as that is the future for Python apps given
   TOML is now included in the standard packages since Python v3.11. Note
   that `tomli` package gets installed if you are running on < 3.11. This
-  change mean any personalised configuration files must be ported to the
-  new format.
+  change mean any previous personal configuration file must be ported to
+  the new format.
 
 - Requires minimum Python version 3.7 instead of 3.6.
 
