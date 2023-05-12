@@ -136,14 +136,14 @@ class IPSERVER:
                           f'from {url} (#{index})')
 
                 self.failed = False
-                return self.name, ip
+                return self
 
         if not self.failed:
             print(f'Failed to fetch {self.name} address from any server',
                 file=sys.stderr)
             self.failed = True
 
-        return None, None
+        return None
 
 class URL:
     allneeds = set()
@@ -191,6 +191,9 @@ class URL:
         self.values = None
         self.time = None
         self.failed = False
+
+        # Add url to cache save data merely for ID/comment
+        self.cache_data = {'url': self.url}
 
         # Load sent values from last time we ran
         if self.file.exists() and not args.ignore_cache:
@@ -241,12 +244,11 @@ class URL:
         response = await urlget(self.session, url)
         if response is not None:
             if not self.response or any(s.search(response) for s in self.response):
-                # Save record of last send (add url for id/comment) (add url
-                # for id/comment)
-                data = {'url': self.url}
-                data.update(values)
+
+                # Update successful, save new record to cache file
+                self.cache_data.update(values)
                 with self.file.open('w') as fp:
-                    json.dump(data, fp)
+                    json.dump(self.cache_data, fp)
 
                 self.values = values
                 self.time = now + force_period
@@ -283,12 +285,12 @@ async def main():
 
     while True:
         # Get IP addresses in parallel
-        res = await asyncio.gather(*(s.get_ip() for s in servers))
-        ips = {k: v for k, v in res if k}
+        ips = await asyncio.gather(*(s.get_ip() for s in servers))
+        ips_vals = {s.name: s.ip for s in ips if s}
         now = time.time_ns()
 
         # Got all addresses, now send to dyndns URLs in parallel
-        await asyncio.gather(*(u.set_ips(now, ips) for u in urls))
+        await asyncio.gather(*(u.set_ips(now, ips_vals) for u in urls))
         await asyncio.sleep(poll_period)
 
 asyncio.run(main())
