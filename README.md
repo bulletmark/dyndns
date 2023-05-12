@@ -36,13 +36,13 @@ need clarification about usage or operation.
 
 ## Operation
 
-This client runs every `poll_period` (default 5 mins) and determines
+This client runs every `poll_period` (default 10 mins) and determines
 your current public IPv4 and/or IPv6 address from a list of configured
 public address servers. If any IP address differs from the last address
 then an update is sent to the pertinent configured dynamic DNS URLs. You
 can configure "&lt;ipv4&gt;" and/or "&lt;ipv6&gt;" placemarkers in your
 URLs to be substituted at runtime, and/or for those services that support
-it, rely on automatic IP detection. Every `force_period` (default 2
+it, rely on automatic IP detection. Every `force_period` (default 24
 hours), an update is sent regardless to each service. The last IP
 addresses determined are stored on change only and are always cached to
 disk so they are preserved through reboots. The service URLs, their

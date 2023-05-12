@@ -52,8 +52,8 @@ with conffile.open('rb') as fp:
     conf = tomllib.load(fp)
 
 tconf = conf.get('times', {})
-poll_period = int(convtime.tosec(tconf.get('poll_period', '5m')))
-force_period = int(convtime.tosec(tconf.get('force_period', '2h'))) * 1000_000_000
+poll_period = int(convtime.tosec(tconf.get('poll_period', '10m')))
+force_period = int(convtime.tosec(tconf.get('force_period', '24h'))) * 1000_000_000
 
 async def urlget(session, url):
     'Fetch given url'

@@ -69,10 +69,10 @@
 [times]
 # Period at which we check our IP address has changed. If no change at
 # this check then no dyndns updates are done.
-poll_period = '5m'
+poll_period = '10m'
 
 # Slower period at which we force a dyndns update.
-force_period = '2h'
+force_period = '24h'
 
 [servers]
 # Public servers which return your IP v4 and/or v6 address, in preferred
