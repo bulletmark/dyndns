@@ -42,7 +42,6 @@ opt.add_argument('-c', '--conf', default=str(CONFFILE),
         help=f'configuration file, default = {CONFFILE}')
 args = opt.parse_args()
 
-
 conffile = Path(args.conf)
 if not conffile.exists():
     sys.exit(f'ERROR: Configuration file "{conffile}" does not exist.')
@@ -53,7 +52,8 @@ with conffile.open('rb') as fp:
 
 tconf = conf.get('times', {})
 poll_period = int(convtime.tosec(tconf.get('poll_period', '10m')))
-force_period = int(convtime.tosec(tconf.get('force_period', '24h'))) * 1000_000_000
+force_period = int(convtime.tosec(tconf.get('force_period', '24h'))) \
+        * 1000_000_000
 
 async def urlget(session, url):
     'Fetch given url'
@@ -243,7 +243,8 @@ class URL:
         # Send to dyndns server
         response = await urlget(self.session, url)
         if response is not None:
-            if not self.response or any(s.search(response) for s in self.response):
+            if not self.response or \
+                    any(s.search(response) for s in self.response):
 
                 # Update successful, save new record to cache file
                 self.cache_data.update(values)
@@ -258,7 +259,8 @@ class URL:
                     types = ' & '.join(self.needs)
                     print(f'Sent {url} for {types}{response}')
             else:
-                print(f'URL {url} responded with error: {response}', file=sys.stderr)
+                print(f'URL {url} responded with error: {response}',
+                      file=sys.stderr)
         else:
             print(f'Failed to send {url}', file=sys.stderr)
 
