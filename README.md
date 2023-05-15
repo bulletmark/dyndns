@@ -16,9 +16,9 @@ URL get update mechanism, such as:
 The above all offer free dynamic DNS services. There is example
 configuration for each of these services in the sample
 [`dyndns.toml`](https://github.com/bulletmark/dyndns/blob/master/dyndns.toml)
-configuration file but note that most dynamic DNS services should be
-supported. Extensive configuration instructions are provided in that
-file.
+configuration file but note that most (free or paid) dynamic DNS
+services should be supported. Extensive configuration instructions are
+provided in that file.
 
 Why another dynamic DNS client? I wanted a simple, lightweight app
 managed by [systemd](https://systemd.io/), generic and flexible enough
