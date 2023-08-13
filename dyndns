@@ -188,9 +188,9 @@ class URL:
         self.allneeds |= self.needs
         self.file = URLCACHE / hasher(self.url.encode()).hexdigest()
         self.session = None
-        self.values = None
         self.time = None
-        self.failed = False
+        self.failed = set()
+        self.values = {}
 
         # Add url to cache save data merely for ID/comment
         self.cache_data = {'url': self.url}
@@ -213,21 +213,24 @@ class URL:
 
     async def set_ips(self, now, values):
         'Send IP addresses to this dyndns server'
-        have = set(values)
-        if have < self.needs:
-            if not self.failed:
-                missing = ' and '.join(self.needs - have)
-                print(f'Skipping url {self.url} because {missing} data missing')
-                self.failed = True
-            return
-        else:
-            self.failed = False
+        failed = self.needs - set(values)
 
-        # Strip out only the values we need for this URL
-        values = {k: values[k] for k in self.needs}
+        # Strip out only the values we need for this URL and use
+        # previous values for those that are failed
+        values = {k: values.get(k, self.values.get(k, '?')) for k in self.needs}
+
+        if failed != self.failed:
+            if failed:
+                missing = ' and '.join(failed)
+                print(f'url {self.url} missing {missing} data')
+            else:
+                recovered = ' and '.join(self.failed)
+                print(f'url {self.url} recovered {recovered} data')
+
+            self.failed = failed
 
         # Only send on change or if "force_period" is due
-        change = not self.values or values != self.values
+        change = values != self.values
         if not change and self.time and now < self.time:
             return
 

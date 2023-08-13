@@ -14,7 +14,8 @@
 
 check:
 	ruff .
-	vermin --exclude tomllib -i --no-tips *.py dyndns
+	flake8 dyndns
+	vermin -v --exclude tomllib -i --no-tips *.py dyndns
 
 doc:
 	update-readme-usage
