@@ -1,4 +1,4 @@
-#!venv/bin/python -u
+#!venv/bin/python
 'Update external IP v4 and/or v6 addresses to a dynamic DNS server.'
 # Mark Blakeney, Nov 2016.
 import os
@@ -55,6 +55,14 @@ poll_period = int(convtime.tosec(tconf.get('poll_period', '10m')))
 force_period = int(convtime.tosec(tconf.get('force_period', '24h'))) \
         * 1000_000_000
 
+def log(msg):
+    'Log message to stdout'
+    print(msg, flush=True)
+
+def logerr(msg):
+    'Log message to stderr'
+    print(msg, file=sys.stderr, flush=True)
+
 async def urlget(session, url):
     'Fetch given url'
     try:
@@ -62,7 +70,7 @@ async def urlget(session, url):
             response.raise_for_status()
             txt = await response.text()
     except Exception as e:
-        print(str(e), file=sys.stderr)
+        logerr(str(e))
         return None
 
     return txt.strip() if txt else ''
@@ -94,7 +102,7 @@ class IPSERVER:
             except Exception:
                 self.file.unlink()
 
-        print(f'Configured ADDRESS {name}: {servers}')
+        log(f'Configured ADDRESS {name}: {servers}')
 
     def ip_valid(self, ipstr):
         'Return True if passed IP address is valid'
@@ -119,28 +127,27 @@ class IPSERVER:
             ip = await urlget(self.session, url)
             if not self.ip_valid(ip):
                 if not self.failed:
-                    print(f'Failed to fetch {self.name} address from '
-                        f'{url} (#{index})', file=sys.stderr)
+                    logerr(f'Failed to fetch {self.name} address from '
+                        f'{url} (#{index})')
             else:
                 # Rotate server list so that last good is first
                 self.servers.rotate(-index)
 
                 if ip != self.ip:
-                    print(f'{self.name} address changed from '
+                    log(f'{self.name} address changed from '
                         f'{self.ip} to {ip} ({url})')
                     self.ip = ip
                     self.file.write_text(ip)
 
                 if args.verbose or first or self.failed:
-                    print(f'Fetched {self.name} address {ip} '
+                    log(f'Fetched {self.name} address {ip} '
                           f'from {url} (#{index})')
 
                 self.failed = False
                 return self
 
         if not self.failed:
-            print(f'Failed to fetch {self.name} address from any server',
-                file=sys.stderr)
+            logerr(f'Failed to fetch {self.name} address from any server')
             self.failed = True
 
         return None
@@ -209,7 +216,7 @@ class URL:
                     del self.values['url']
 
         needs = ' and '.join(self.needs)
-        print(f'Configured URL {self.url}: {needs}')
+        log(f'Configured URL {self.url}: {needs}')
 
     async def set_ips(self, now, values):
         'Send IP addresses to this dyndns server'
@@ -222,10 +229,10 @@ class URL:
         if failed != self.failed:
             if failed:
                 missing = ' and '.join(failed)
-                print(f'url {self.url} missing {missing} data')
+                log(f'url {self.url} missing {missing} data')
             else:
                 recovered = ' and '.join(self.failed)
-                print(f'url {self.url} recovered {recovered} data')
+                log(f'url {self.url} recovered {recovered} data')
 
             self.failed = failed
 
@@ -260,12 +267,11 @@ class URL:
                     if response:
                         response = f': {response}'
                     types = ' & '.join(self.needs)
-                    print(f'Sent {url} for {types}{response}')
+                    log(f'Sent {url} for {types}{response}')
             else:
-                print(f'URL {url} responded with error: {response}',
-                      file=sys.stderr)
+                logerr(f'URL {url} responded with error: {response}')
         else:
-            print(f'Failed to send {url}', file=sys.stderr)
+            logerr(f'Failed to send {url}')
 
 async def main():
     'Main code'
