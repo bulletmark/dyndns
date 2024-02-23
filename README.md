@@ -73,8 +73,8 @@ Requires `python` 3.7 or later and a modern Linux `systemd` environment.
 2. Create virtual environment (venv) and install service.
 
     ```shell
-    $ python3 -m venv venv
-    $ venv/bin/pip install -r requirements.txt
+    $ python3 -m venv .venv
+    $ .venv/bin/pip install -r requirements.txt
     $ sudo cp dyndns.service /etc/systemd/system
     $ sudoedit /etc/systemd/system/dyndns.service # Edit #TEMPLATE# values.
     ```
