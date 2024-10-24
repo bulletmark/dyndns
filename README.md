@@ -8,10 +8,10 @@ URLs in the configuration file and run it.
 DynDNS supports dynamic DNS services which use a simple http or https
 URL get update mechanism, such as:
 
-- [Duck DNS](https://duckdns.org/)
-- [Dynv6](https://dynv6.com/)
 - [Dynu](https://dynu.com/)
+- [Dynv6](https://dynv6.com/)
 - [FreeDNS](https://freedns.afraid.org/)
+- [Duck DNS](https://duckdns.org/)
 
 The above all offer free dynamic DNS services. There is example
 configuration for each of these services in the sample
