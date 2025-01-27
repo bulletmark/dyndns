@@ -13,8 +13,7 @@
 # details.
 
 check:
-	ruff .
-	flake8 dyndns
+	ruff check .
 	vermin -v --exclude tomllib -i --no-tips *.py dyndns
 
 doc:
