@@ -11,7 +11,7 @@ URL get update mechanism, such as:
 - [Dynu](https://dynu.com/)
 - [Dynv6](https://dynv6.com/)
 - [FreeDNS](https://freedns.afraid.org/)
-- [Duck DNS](https://duckdns.org/)
+- [Duck DNS](https://www.duckdns.org/)
 
 The above all offer free dynamic DNS services. There is example
 configuration for each of these services in the sample
