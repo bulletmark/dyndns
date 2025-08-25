@@ -37,6 +37,7 @@
 # response = ['^good', '^nochg']
 
 # Dynv6, with explicit ipv4 and ipv6: See https://dynv6.com/docs/apis.
+# NOTE that dynv6 seems to not be functioning correctly anymore (as of Aug 2025)
 # [[urls]]
 # url = 'http://dynv6.com/api/update?zone=DOMAIN&token=TOKEN&ipv4=<ipv4>&ipv6=<ipv6>'
 # response = '^addresses updated'

@@ -1,9 +1,10 @@
 #!/usr/bin/python3
-'Module to convert configuration time values'
-import sys
+"Module to convert configuration time values"
+
 from datetime import timedelta
 
-def todelta(time_str):
+
+def todelta(time_str) -> timedelta:
     'Convert time "nn[.d][smdhw]" string to timedelta'
 
     # Ensure passed value is string
@@ -30,8 +31,9 @@ def todelta(time_str):
         elif timestr.endswith('w'):
             return timedelta(weeks=num)
 
-    sys.exit(f'Do not understand "{time_str}" time format')
+    raise Exception(f'Do not understand "{time_str}" time format')
 
-def tosec(time_str):
+
+def tosec(timestr: str) -> float:
     'Convert time "nn[.d][smdhw]" string to secs'
-    return todelta(time_str).total_seconds()
+    return todelta(timestr).total_seconds()

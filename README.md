@@ -9,9 +9,9 @@ DynDNS supports dynamic DNS services which use a simple http or https
 URL get update mechanism, such as:
 
 - [Dynu](https://dynu.com/)
-- [Dynv6](https://dynv6.com/)
 - [FreeDNS](https://freedns.afraid.org/)
 - [Duck DNS](https://www.duckdns.org/)
+- [Dynv6](https://dynv6.com/) (seems not functioning anymore as of Aug 2025)
 
 The above all offer free dynamic DNS services. There is example
 configuration for each of these services in the sample
@@ -58,7 +58,7 @@ the examples and instructions in that file.
 
 ## Installation
 
-Requires `python` 3.7 or later and a modern Linux `systemd` environment.
+Requires `python` 3.8 or later and a modern Linux `systemd` environment.
 
 1. Clone repository and create configuration:
 
@@ -140,14 +140,14 @@ Type `dyndns -h` to view the usage summary:
 ```
 usage: dyndns [-h] [-v] [-i] [-c CONF]
 
-Update external IP v4 and/or v6 addresses to a dynamic DNS server.
+Update external IP v4 and/or v6 addresses to dynamic DNS servers.
 
 options:
-  -h, --help            show this help message and exit
-  -v, --verbose         verbose output
-  -i, --ignore-cache    ignore cache for startup
-  -c CONF, --conf CONF  configuration file, default =
-                        ~/.config/dyndns.toml
+  -h, --help          show this help message and exit
+  -v, --verbose       verbose output
+  -i, --ignore-cache  ignore cache for startup
+  -c, --conf CONF     configuration file, default =
+                      $HOME/.config/dyndns.toml
 ```
 
 ## Summary of Version 2 Changes

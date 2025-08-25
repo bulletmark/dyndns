@@ -1,17 +1,21 @@
 #!.venv/bin/python
-'Update external IP v4 and/or v6 addresses to a dynamic DNS server.'
+"Update external IP v4 and/or v6 addresses to dynamic DNS servers."
 # Mark Blakeney, Nov 2016.
-import os
-import sys
+
+from __future__ import annotations
+
 import argparse
 import asyncio
-import time
 import json
+import os
 import re
-from pathlib import Path
-from hashlib import sha256 as hasher
+import sys
+import time
 from collections import deque
+from hashlib import sha256 as hasher
 from ipaddress import IPv4Address, IPv6Address
+from pathlib import Path
+
 from aiohttp import ClientSession as Session
 
 if sys.version_info >= (3, 11):
@@ -23,8 +27,7 @@ import convtime
 
 PROG = Path(__file__).stem
 CACHEDIR = Path(os.getenv('XDG_CACHE_HOME', '~/.cache'), PROG).expanduser()
-CONFFILE = Path(os.getenv('XDG_CONFIG_HOME', '~/.config'),
-                f'{PROG}.toml').expanduser()
+CONFFILE = Path(os.getenv('XDG_CONFIG_HOME', '~/.config'), f'{PROG}.toml').expanduser()
 IPCACHE = CACHEDIR / 'ipaddrs'
 URLCACHE = CACHEDIR / 'urls'
 
@@ -33,13 +36,17 @@ ADDRESS_TXT = ' or '.join(ADDRESS_TYPES)
 OFFSTATES = {'off', 'no', 'none', 'false'}
 
 # Process command line options
-opt = argparse.ArgumentParser(description=__doc__.strip())
-opt.add_argument('-v', '--verbose', action='store_true',
-        help='verbose output')
-opt.add_argument('-i', '--ignore-cache', action='store_true',
-        help='ignore cache for startup')
-opt.add_argument('-c', '--conf', default=str(CONFFILE),
-        help=f'configuration file, default = {CONFFILE}')
+opt = argparse.ArgumentParser(description=__doc__)
+opt.add_argument('-v', '--verbose', action='store_true', help='verbose output')
+opt.add_argument(
+    '-i', '--ignore-cache', action='store_true', help='ignore cache for startup'
+)
+opt.add_argument(
+    '-c',
+    '--conf',
+    default=str(CONFFILE),
+    help=f'configuration file, default = {CONFFILE}',
+)
 args = opt.parse_args()
 
 conffile = Path(args.conf)
@@ -52,19 +59,21 @@ with conffile.open('rb') as fp:
 
 tconf = conf.get('times', {})
 poll_period = int(convtime.tosec(tconf.get('poll_period', '10m')))
-force_period = int(convtime.tosec(tconf.get('force_period', '24h'))) \
-        * 1000_000_000
+force_period = int(convtime.tosec(tconf.get('force_period', '24h'))) * 1000_000_000
 
-def log(msg):
-    'Log message to stdout'
+
+def log(msg: str) -> None:
+    "Log message to stdout"
     print(msg, flush=True)
 
-def logerr(msg):
-    'Log message to stderr'
+
+def logerr(msg: str) -> None:
+    "Log message to stderr"
     print(msg, file=sys.stderr, flush=True)
 
-async def urlget(session, url):
-    'Fetch given url'
+
+async def urlget(session: Session, url: str) -> str | None:
+    "Fetch given url"
     try:
         async with session.get(url) as response:
             response.raise_for_status()
@@ -75,11 +84,12 @@ async def urlget(session, url):
 
     return txt.strip() if txt else ''
 
+
 class IPSERVER:
     types = set()
 
-    def __init__(self, name, servers):
-        'Create IP address type to poll servers'
+    def __init__(self, name: str, servers: list[str]) -> None:
+        "Create IP address type to poll servers"
         self.address_type = ADDRESS_TYPES.get(name)
         if not self.address_type:
             sys.exit(f'ERROR: Invalid server IP type {name} configured.')
@@ -104,9 +114,9 @@ class IPSERVER:
 
         log(f'Configured ADDRESS {name}: {servers}')
 
-    def ip_valid(self, ipstr):
-        'Return True if passed IP address is valid'
-        if not ipstr:
+    def ip_valid(self, ipstr: str | None) -> bool:
+        "Return True if passed IP address is valid"
+        if not ipstr or not self.address_type:
             return False
 
         try:
@@ -116,32 +126,31 @@ class IPSERVER:
 
         return True
 
-    async def get_ip(self):
-        'Return (name, ipaddress) if we fetch IP address successfully'
+    async def get_ip(self) -> IPSERVER | None:
+        "Return (name, ipaddress) if we fetch IP address successfully"
         # Set session handle 1st time (must be done in async func)
-        first = not self.session
-        if first:
+        if not self.session:
             self.session = Session()
+            first = True
+        else:
+            first = False
 
         for index, url in enumerate(self.servers):
             ip = await urlget(self.session, url)
             if not self.ip_valid(ip):
                 if not self.failed:
-                    logerr(f'Failed to fetch {self.name} address from '
-                        f'{url} (#{index})')
+                    logerr(f'Failed to fetch {self.name} address from {url} (#{index})')
             else:
                 # Rotate server list so that last good is first
                 self.servers.rotate(-index)
 
-                if ip != self.ip:
-                    log(f'{self.name} address changed from '
-                        f'{self.ip} to {ip} ({url})')
+                if ip and ip != self.ip:
+                    log(f'{self.name} address changed from {self.ip} to {ip} ({url})')
                     self.ip = ip
                     self.file.write_text(ip)
 
                 if args.verbose or first or self.failed:
-                    log(f'Fetched {self.name} address {ip} '
-                          f'from {url} (#{index})')
+                    log(f'Fetched {self.name} address {ip} from {url} (#{index})')
 
                 self.failed = False
                 return self
@@ -152,11 +161,12 @@ class IPSERVER:
 
         return None
 
+
 class URL:
     allneeds = set()
 
-    def __init__(self, conf):
-        'Create URL for sending to dyndns server'
+    def __init__(self, conf: dict[str, str]) -> None:
+        "Create URL for sending to dyndns server"
         self.url = conf.get('url')
         if not self.url:
             sys.exit('ERROR: url not defined')
@@ -180,18 +190,22 @@ class URL:
         # Sanity check configuration
         for key in self.needs:
             if key not in IPSERVER.types:
-                sys.exit(f'ERROR: URL {self.url} needs {key} but {key} server '
-                         'is not configured.')
+                sys.exit(
+                    f'ERROR: URL {self.url} needs {key} but {key} server '
+                    'is not configured.'
+                )
 
         response = conf.get('response')
-        if response is None:
-            self.response = []
-        elif isinstance(response, str):
-            self.response = [response]
-        else:
-            self.response = response
 
-        self.response = [re.compile(s) for s in self.response]
+        response_l = []
+        if isinstance(response, str):
+            response_l.append(response)
+        elif isinstance(response, list):
+            response_l.extend(response)
+        else:
+            sys.exit(f'ERROR: url {self.url}, response must be string or list.')
+
+        self.response = [re.compile(s) for s in response_l]
         self.allneeds |= self.needs
         self.file = URLCACHE / hasher(self.url.encode()).hexdigest()
         self.session = None
@@ -218,8 +232,8 @@ class URL:
         needs = ' and '.join(self.needs)
         log(f'Configured URL {self.url}: {needs}')
 
-    async def set_ips(self, now, values):
-        'Send IP addresses to this dyndns server'
+    async def set_ips(self, now: int, values: dict[str, str]) -> None:
+        "Send IP addresses to this dyndns server"
         failed = self.needs - set(values)
 
         # Strip out only the values we need for this URL and use
@@ -242,7 +256,9 @@ class URL:
             return
 
         # Substitute IPs into URL
-        url = self.url
+        if not (url := self.url):
+            return
+
         for key, value in values.items():
             url = url.replace(f'<{key}>', value)
 
@@ -253,9 +269,7 @@ class URL:
         # Send to dyndns server
         response = await urlget(self.session, url)
         if response is not None:
-            if not self.response or \
-                    any(s.search(response) for s in self.response):
-
+            if not self.response or any(s.search(response) for s in self.response):
                 # Update successful, save new record to cache file
                 self.cache_data.update(values)
                 with self.file.open('w') as fp:
@@ -273,8 +287,9 @@ class URL:
         else:
             logerr(f'Failed to send {url}')
 
-async def main():
-    'Main code'
+
+async def main() -> None:
+    "Main code"
     IPCACHE.mkdir(parents=True, exist_ok=True)
     URLCACHE.mkdir(parents=True, exist_ok=True)
 
@@ -282,8 +297,9 @@ async def main():
     servers = {k: IPSERVER(k, v) for k, v in conf.get('servers', {}).items()}
 
     if len(servers) < 1:
-        sys.exit(f'ERROR: Must define at least one IP address '
-                 f'{ADDRESS_TXT} server list.')
+        sys.exit(
+            f'ERROR: Must define at least one IP address {ADDRESS_TXT} server list.'
+        )
 
     # Build list of dyndns urls
     urls = [URL(c) for c in conf.get('urls', {})]
@@ -297,11 +313,12 @@ async def main():
     while True:
         # Get IP addresses in parallel
         ips = await asyncio.gather(*(s.get_ip() for s in servers))
-        ips_vals = {s.name: s.ip for s in ips if s}
+        ips_vals = {s.name: s.ip for s in ips if s and s.ip}
         now = time.time_ns()
 
         # Got all addresses, now send to dyndns URLs in parallel
         await asyncio.gather(*(u.set_ips(now, ips_vals) for u in urls))
         await asyncio.sleep(poll_period)
+
 
 asyncio.run(main())
