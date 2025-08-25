@@ -58,7 +58,8 @@ the examples and instructions in that file.
 
 ## Installation
 
-Requires `python` 3.8 or later and a modern Linux `systemd` environment.
+Requires `python` 3.8 or later and a modern Linux `systemd` environment. Also
+assumes the [`uv`](https://docs.astral.sh/uv) tool is installed.
 
 1. Clone repository and create configuration:
 
@@ -73,21 +74,11 @@ Requires `python` 3.8 or later and a modern Linux `systemd` environment.
 2. Create virtual environment (venv) and install service.
 
     ```shell
-    $ python3 -m venv .venv
-    $ .venv/bin/pip install -r requirements.txt
+    $ uv venv
+    $ venv pip install -r requirements.txt
     $ sudo cp dyndns.service /etc/systemd/system
     $ sudoedit /etc/systemd/system/dyndns.service # Edit #TEMPLATE# values.
     ```
-
-Note: Alternatively, to create the venv, install the requirement
-packages, insert the template values, and enable + start the service you
-can use my [pinstall](https://github.com/bulletmark/pinstall) tool. Just
-install it and do the following in the `dyndns` directory.
-
-```
-$ pinstall venv
-$ pinstall service
-```
 
 ## Starting, Stopping, and Status
 
