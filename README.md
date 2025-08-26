@@ -58,8 +58,8 @@ the examples and instructions in that file.
 
 ## Installation
 
-Requires `python` 3.8 or later and a modern Linux `systemd` environment. Also
-assumes the [`uv`](https://docs.astral.sh/uv) tool is installed.
+Requires `python` 3.8 or later and a modern Linux `systemd` environment.
+Also assumes the [`uv`](https://docs.astral.sh/uv) tool is installed.
 
 1. Clone repository and create configuration:
 
@@ -75,7 +75,7 @@ assumes the [`uv`](https://docs.astral.sh/uv) tool is installed.
 
     ```shell
     $ uv venv
-    $ venv pip install -r requirements.txt
+    $ uv pip install -r requirements.txt
     $ sudo cp dyndns.service /etc/systemd/system
     $ sudoedit /etc/systemd/system/dyndns.service # Edit #TEMPLATE# values.
     ```
