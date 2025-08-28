@@ -112,7 +112,7 @@ class IPSERVER:
             except Exception:
                 self.file.unlink()
 
-        log(f'Configured ADDRESS {name}: {servers}')
+        log(f'Configured servers {name}: {servers}')
 
     def ip_valid(self, ipstr: str | None) -> bool:
         "Return True if passed IP address is valid"
