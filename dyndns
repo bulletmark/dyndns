@@ -170,9 +170,10 @@ class URL:
         self.url = conf.get('url')
         if not self.url:
             sys.exit('ERROR: url not defined')
+            return
 
         # Record which IP address types we need for this URL
-        self.needs = {k for k in ADDRESS_TYPES if f'<{k}>' in self.url}
+        self.needs = {k for k in ADDRESS_TYPES if self.url and f'<{k}>' in self.url}
 
         auto = conf.get('auto', 'off')
         auto = 'false' if auto is False else auto.lower()
