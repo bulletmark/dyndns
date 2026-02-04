@@ -7,7 +7,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import os
 import re
 import sys
 import time
@@ -16,6 +15,7 @@ from hashlib import sha256 as hasher
 from ipaddress import IPv4Address, IPv6Address
 from pathlib import Path
 
+import platformdirs
 from aiohttp import ClientSession as Session
 
 if sys.version_info >= (3, 11):
@@ -26,8 +26,8 @@ else:
 import convtime
 
 PROG = Path(__file__).stem
-CACHEDIR = Path(os.getenv('XDG_CACHE_HOME', '~/.cache'), PROG).expanduser()
-CONFFILE = Path(os.getenv('XDG_CONFIG_HOME', '~/.config'), f'{PROG}.toml').expanduser()
+CACHEDIR = platformdirs.user_cache_path() / PROG
+CONFFILE = platformdirs.user_config_path() / f'{PROG}.toml'
 IPCACHE = CACHEDIR / 'ipaddrs'
 URLCACHE = CACHEDIR / 'urls'
 
