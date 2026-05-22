@@ -1,0 +1,5 @@
+#!/bin/sh
+exec 2>&1
+# Wait for the system clock to be synchronized before starting
+chronyc waitsync 0 0 0 1 >/dev/null
+exec chpst -u "@USER@" -C "@PROGDIR@" ./@PROG@

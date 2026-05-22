@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 "Module to convert configuration time values"
 
+from __future__ import annotations
+
 from datetime import timedelta
 
 
-def todelta(time_str) -> timedelta:
+def todelta(time_str: str | float) -> timedelta:
     'Convert time "nn[.d][smdhw]" string to timedelta'
 
     # Ensure passed value is string
@@ -34,6 +36,6 @@ def todelta(time_str) -> timedelta:
     raise Exception(f'Do not understand "{time_str}" time format')
 
 
-def tosec(timestr: str) -> float:
+def tosec(time_str: str) -> float:
     'Convert time "nn[.d][smdhw]" string to secs'
-    return todelta(timestr).total_seconds()
+    return todelta(time_str).total_seconds()

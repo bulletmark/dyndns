@@ -123,7 +123,6 @@ necessary. Then restart the service.
 $ sudo systemctl restart dyndns
 ```
 
-
 ## Usage
 
 Type `dyndns -h` to view the usage summary:
@@ -140,27 +139,6 @@ options:
   -c, --conf CONF     configuration file, default =
                       $HOME/.config/dyndns.toml
 ```
-
-## Summary of Version 2 Changes
-
-- Added the ability to cater for IPv6 addresses.
-
-- Added the ability to configure multiple dynamic DNS server URLs
-  instead of just one and also the ability to substitute "&lt;ipv4&gt;"
-  and "&lt;ipv6&gt;" placemarkers in the url string.
-
-- Cater for dynamic DNS servers which return one or more text strings
-  for success/failure instead of just looking at the HTML response
-  status code.
-
-- Changed from [YAML](https://yaml.org/) to [TOML](https://toml.io/en/)
-  configuration file format as that is the future for Python apps given
-  TOML is now included in the standard packages since Python v3.11. Note
-  that `tomli` package gets installed if you are running on < 3.11. This
-  change mean any previous personal configuration file must be ported to
-  the new format.
-
-- Requires minimum Python version 3.7 instead of 3.6.
 
 ## License
 
