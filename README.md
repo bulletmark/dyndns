@@ -10,7 +10,7 @@ URL get update mechanism, such as:
 
 - [Dynu](https://dynu.com/)
 - [FreeDNS](https://freedns.afraid.org/)
-- [Duck DNS](https://www.duckdns.org/)
+- [Duck DNS](https://www.duckdns.org/) (unreliable as of 2026)
 - [Dynv6](https://dynv6.com/) (seems not functioning anymore as of Aug 2025)
 
 The above all offer free dynamic DNS services. There is example

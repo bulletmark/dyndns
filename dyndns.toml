@@ -36,12 +36,6 @@
 # url = 'https://api.dynu.com/nic/update?password=PASSWORD&hostname=DOMAIN&myip=<ipv4>&myipv6=<ipv6>'
 # response = ['^good', '^nochg']
 
-# Dynv6, with explicit ipv4 and ipv6: See https://dynv6.com/docs/apis.
-# NOTE that dynv6 seems to not be functioning correctly anymore (as of Aug 2025)
-# [[urls]]
-# url = 'http://dynv6.com/api/update?zone=DOMAIN&token=TOKEN&ipv4=<ipv4>&ipv6=<ipv6>'
-# response = '^addresses updated'
-
 # Freedns.afraid.org (v2), with automatic IPv4 detection: see https://freedns.afraid.org/dynamic/v2/.
 # [[urls]]
 # url = 'http://sync.afraid.org/u/TOKEN/'
@@ -54,7 +48,14 @@
 # auto = 'ipv6'
 # response = ['Updated', 'No IP change']
 
+# Dynv6, with explicit ipv4 and ipv6: See https://dynv6.com/docs/apis.
+# NOTE that dynv6 seems to not be functioning correctly anymore (as of Aug 2025).
+# [[urls]]
+# url = 'http://dynv6.com/api/update?zone=DOMAIN&token=TOKEN&ipv4=<ipv4>&ipv6=<ipv6>'
+# response = '^addresses updated'
+
 # duckdns.org: See https://www.duckdns.org/spec.jsp.
+# NOTE that duckdns is unreliable as of 2026.
 # [[urls]]
 # url = 'https://www.duckdns.org/update?domains=HOSTNAME&token=TOKEN&ip=<ipv4>&ipv6=<ipv6>'
 # response = '^OK$'
