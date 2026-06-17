@@ -55,7 +55,7 @@
 # response = '^addresses updated'
 
 # duckdns.org: See https://www.duckdns.org/spec.jsp.
-# NOTE that duckdns is unreliable as of 2026.
+# NOTE that duckdns is unreliable as of late 2025.
 # [[urls]]
 # url = 'https://www.duckdns.org/update?domains=HOSTNAME&token=TOKEN&ip=<ipv4>&ipv6=<ipv6>'
 # response = '^OK$'
