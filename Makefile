@@ -4,7 +4,7 @@ PYFILES = $(PYNAME) $(wildcard *.py)
 
 check::
 	ruff check $(PYFILES)
-	pyright $(PYFILES)
+	ty check $(PYFILES)
 	vermin -v --exclude tomllib -i --no-tips $(PYFILES)
 	md-link-checker
 

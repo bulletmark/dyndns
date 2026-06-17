@@ -75,7 +75,7 @@ Also assumes the [`uv`](https://docs.astral.sh/uv) tool is installed.
 
     ```shell
     $ uv venv
-    $ uv pip install -r requirements.txt
+    $ uv pip install .
     $ sudo cp dyndns.service /etc/systemd/system
     $ sudoedit /etc/systemd/system/dyndns.service # Edit #TEMPLATE# values.
     ```
