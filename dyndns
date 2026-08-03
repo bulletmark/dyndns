@@ -14,8 +14,9 @@ from collections import deque
 from hashlib import sha256 as hasher
 from ipaddress import IPv4Address, IPv6Address
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, final
 
+import ifaddr
 import platformdirs
 from aiohttp import ClientSession as Session
 
@@ -88,24 +89,31 @@ async def urlget(
     return txt.strip() if txt else ''
 
 
-class IPSERVER:
-    types: ClassVar = set()
+@final
+class IPPROVIDER:
+    types: ClassVar[set[str]] = set()
 
-    def __init__(self, name: str, servers: list[str]) -> None:
-        "Create IP address type to poll servers"
-        self.address_type = ADDRESS_TYPES.get(name)
-        if not self.address_type:
-            sys.exit(f'ERROR: Invalid server IP type {name} configured.')
+    def __init__(
+        self, name: str, interface_name: str | None, servers: list[str]
+    ) -> None:
+        "Create IP provider type to fetch a v4 or v6 IP address"
+        address_type = ADDRESS_TYPES.get(name)
+        if not address_type:
+            sys.exit(f'ERROR: Invalid IP type {name} configured.')
+        self.address_type = address_type
 
-        if len(servers) < 1:
-            sys.exit(f'ERROR: Must define at least 1 {name} server.')
+        if not interface_name and len(servers) < 1:
+            sys.exit(
+                f'ERROR: Must define at least 1 {name} ip source (interface name or server).'
+            )
 
         self.name = name
+        self.interface_name = interface_name
         self.servers = deque(servers)
         self.types.add(name)
         self.file = IPCACHE / name
         self.session = None
-        self.ip = None
+        self.ip: str | None = None
         self.failed = False
 
         # Load fetch values from last time we ran
@@ -115,22 +123,36 @@ class IPSERVER:
             except Exception:
                 self.file.unlink()
 
-        log(f'Configured servers {name}: {servers}')
+        log(
+            f'Configured ip provider {name}: interface={self.interface_name}, servers={",".join(self.servers)}'
+        )
 
-    def ip_valid(self, ipstr: str | None) -> bool:
-        "Return True if passed IP address is valid"
+    def ip_valid(self, ipstr: str | None) -> str | None:
+        "Return formatted ip string if passed IP address valid and global"
         if not ipstr or not self.address_type:
-            return False
+            return None
 
         try:
-            _ = self.address_type(ipstr)
+            ip = self.address_type(ipstr)
+            if not ip.is_global:
+                return None
+            return ip.exploded
         except Exception:
-            return False
+            return None
 
-        return True
+    def _persist_ip(self, ip: str, source: str, verbose: bool):
+        if verbose or self.failed:
+            log(f'Fetched {self.name} address {ip} from {source}')
 
-    async def get_ip(self) -> IPSERVER | None:
-        "Return (name, ipaddress) if we fetch IP address successfully"
+        if ip and ip != self.ip:
+            log(f'{self.name} address changed from {self.ip} to {ip} ({source})')
+            self.ip = ip
+            _ = self.file.write_text(ip)
+
+        self.failed = False
+
+    async def get_ip(self) -> IPPROVIDER | None:
+        "Return IPPROVIDER if IP address was fetched successfully"
         # Set session handle 1st time (must be done in async func)
         if not self.session:
             self.session = Session()
@@ -138,35 +160,62 @@ class IPSERVER:
         else:
             first = False
 
+        # first attempt to read IP from interface, if configured
+        if self.interface_name:
+            try:
+                # a single interface might have multiple IP addresses
+                # only accept if there is only a single global one
+                ip_strings = (
+                    i.ip[0] if isinstance(i.ip, tuple) else i.ip
+                    for i in next(
+                        a.ips
+                        for a in ifaddr.get_adapters()
+                        if a.name == self.interface_name
+                    )
+                )
+                ips = [
+                    valid_ip
+                    for ip in ip_strings
+                    if (valid_ip := self.ip_valid(ip)) is not None
+                ]
+            except Exception:
+                ips = []
+
+            if len(ips) != 1:
+                if not self.failed:
+                    logerr(
+                        f"Couldn't fetch {self.name} address on local interface ({self.interface_name} with {len(ips)} global addresses)"
+                    )
+            else:
+                self._persist_ip(
+                    ips[0], f'interface {self.interface_name}', args.verbose or first
+                )
+                return self
+
+        # then attempt to poll server
         for index, url in enumerate(self.servers):
             ip = await urlget(self.session, url)
-            if not self.ip_valid(ip):
+            ip_valid = self.ip_valid(ip)
+            if not ip_valid:
                 if not self.failed:
                     logerr(f'Failed to fetch {self.name} address from {url} (#{index})')
             else:
                 # Rotate server list so that last good is first
                 self.servers.rotate(-index)
 
-                if ip and ip != self.ip:
-                    log(f'{self.name} address changed from {self.ip} to {ip} ({url})')
-                    self.ip = ip
-                    self.file.write_text(ip)
-
-                if args.verbose or first or self.failed:
-                    log(f'Fetched {self.name} address {ip} from {url} (#{index})')
-
-                self.failed = False
+                self._persist_ip(ip_valid, f'{url} (#{index})', args.verbose or first)
                 return self
 
         if not self.failed:
-            logerr(f'Failed to fetch {self.name} address from any server')
+            logerr(f'Failed to obtain {self.name} address from any source')
             self.failed = True
 
         return None
 
 
+@final
 class URL:
-    allneeds: ClassVar = set()
+    allneeds: ClassVar[set[str]] = set()
 
     def __init__(self, conf: dict[str, Any]) -> None:
         "Create URL for sending to dyndns server"
@@ -196,15 +245,15 @@ class URL:
 
         # Sanity check configuration
         for key in self.needs:
-            if key not in IPSERVER.types:
+            if key not in IPPROVIDER.types:
                 sys.exit(
                     f'ERROR: URL {self.url} needs {key} but {key} server '
-                    'is not configured.'
+                    + 'is not configured.'
                 )
 
         response = conf.get('response')
 
-        response_l = []
+        response_l: list[str] = []
         if isinstance(response, str):
             response_l.append(response)
         elif isinstance(response, list):
@@ -212,12 +261,12 @@ class URL:
         elif response is not None:
             sys.exit(f'ERROR: url {self.url}, response must be string or list.')
 
-        self.response = [re.compile(s) for s in response_l]
-        self.allneeds |= self.needs
+        self.response: list[re.Pattern[str]] = [re.compile(s) for s in response_l]
+        URL.allneeds |= self.needs
         self.file = URLCACHE / hasher(self.url.encode()).hexdigest()
         self.session = None
         self.time = None
-        self.failed = set()
+        self.failed: set[str] = set()
         self.values = {}
 
         # Add url to cache save data merely for ID/comment
@@ -300,13 +349,13 @@ async def main() -> None:
     IPCACHE.mkdir(parents=True, exist_ok=True)
     URLCACHE.mkdir(parents=True, exist_ok=True)
 
-    # Build list of IP address servers
-    servers = {k: IPSERVER(k, v) for k, v in conf.get('servers', {}).items()}
+    # Build list of IP address providers
+    all_providers: dict[str, IPPROVIDER] = {}
+    for k, c in conf.get('provider', {}).items():
+        all_providers[k] = IPPROVIDER(k, c.get('interface'), c.get('servers', []))
 
-    if len(servers) < 1:
-        sys.exit(
-            f'ERROR: Must define at least one IP address {ADDRESS_TXT} server list.'
-        )
+    if len(all_providers) < 1:
+        sys.exit(f'ERROR: Must define at least one {ADDRESS_TXT} address provider.')
 
     # Build list of dyndns urls
     urls = [URL(c) for c in conf.get('urls', {})]
@@ -315,16 +364,16 @@ async def main() -> None:
         sys.exit('ERROR: Must define at least one url.')
 
     # Now discard IP address types we dont actually need after reading URLs
-    servers = [servers[k] for k in URL.allneeds]
+    providers = [all_providers[k] for k in URL.allneeds]
 
     while True:
         # Get IP addresses in parallel
-        ips = await asyncio.gather(*(s.get_ip() for s in servers))
+        ips = await asyncio.gather(*(p.get_ip() for p in providers))
         ips_vals = {s.name: s.ip for s in ips if s and s.ip}
         now = time.time_ns()
 
         # Got all addresses, now send to dyndns URLs in parallel
-        await asyncio.gather(*(u.set_ips(now, ips_vals) for u in urls))
+        _ = await asyncio.gather(*(u.set_ips(now, ips_vals) for u in urls))
         await asyncio.sleep(poll_period)
 
 

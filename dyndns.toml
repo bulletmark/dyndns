@@ -82,27 +82,39 @@
 [times]
 # Period at which we check our IP address has changed. If no change at
 # this check then no dyndns updates are done.
-poll_period = '10m'
+poll_period = "10m"
 
 # Slower period at which we force a dyndns update.
-force_period = '24h'
+force_period = "24h"
 
-[servers]
-# Public servers which return your IP v4 and/or v6 address, in preferred
-# order. If a request fails, then program will use the next server in
-# the group list (until it fails). A failed server is rotated to the end
-# of the list (internally, at runtime). Note that the program only polls
-# ipv4 and/or ipv6 servers if required by the configured urls above so
-# no need to delete anything below.
-ipv4 = [
-  'https://ipv4.icanhazip.com/',
-  'https://ipinfo.io/ip',
-  'https://api.ipify.org',
+[provider]
+# Provider for IP v4 and/or v6 addresses
+# An address can either be provided by a local network interface or by
+# a public server which returns your address.
+# On every poll the local interface (if configured) is checked first and
+# it's address is used if it has a single global address.
+# If it has multiple addresses (or none), the list of servers is inquired.
+#
+# The list of servers are used in the specified order. If a request fails,
+# then the program will use the next server in the list (until it fails).
+# A failed server is rotated to the end of the list (internally, at runtime).
+# Note that the program only polls ipv4 and/or ipv6 servers if required by
+# the configured urls above so no need to delete anything.
+[provider.ipv4]
+# interface = "eth0"
+
+servers = [
+  "https://ipv4.icanhazip.com/",
+  "https://ipinfo.io/ip",
+  "https://api.ipify.org",
 ]
 
-ipv6 = [
-  'https://ipv6.icanhazip.com/',
-  'https://api64.ipify.org',
+[provider.ipv6]
+# interface = "eth0"
+
+servers = [
+    "https://ipv6.icanhazip.com/",
+    "https://api64.ipify.org",
 ]
 
 # vim:se syn=toml sw=2:
